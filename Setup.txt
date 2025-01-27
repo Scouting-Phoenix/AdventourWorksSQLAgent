@@ -1,0 +1,84 @@
+Disclaimer: 
+All steps below are windows OS specific
+
+
+-------------------------------------------------------------------
+-- Setup MS SQL Infrastructure
+-------------------------------------------------------------------
+
+
+Install Microsoft® SQL Server® 2022 Express
+https://www.microsoft.com/en-us/download/details.aspx?id=104781&lc=1033
+
+Install SSMS
+https://learn.microsoft.com/en-us/sql/ssms/download-sql-server-management-studio-ssms?view=sql-server-ver16
+
+Download AdventourWorks Database Backupfile
+https://github.com/Microsoft/sql-server-samples/releases/download/adventureworks/AdventureWorks2022.bak
+
+Restore bak File with SSMS to MS SQL Server
+https://learn.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver16&tabs=ssms#restore-to-sql-server
+
+-------------------------------------------------------------------
+-- Setup Postgres Infrastructure
+-------------------------------------------------------------------
+
+Install PostGres DB (v16. V17 doesn't support pgvector extension (yet)):
+https://www.postgresql.org/download/windows/
+
+Set a PW for the technical DB User "postgres" (don't ever lose it!)
+
+Add the following Extensions:
+	pgAgent
+	Postgres DB-Driver : psqlODBC 
+
+
+
+Open pgAdmin and create a new database "AdventureWorks_SQLAgent"
+
+
+-------------------------------------------------------------------
+-- Setup pgvector extension
+-------------------------------------------------------------------
+
+To install the pgvector extension follow the following steps: 
+https://github.com/pgvector/pgvector?tab=readme-ov-file#windows
+
+Install Visual Studio 
+https://learn.microsoft.com/en-us/cpp/build/vscpp-step-0-installation?view=msvc-170
+
+Add the Workload "Desktop development with C++"
+
+
+Install GIT (if not present) and add it to cmd (lst step 
+https://git-scm.com/downloads/win
+
+start cmd: 
+call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+set "PGROOT=C:\Program Files\PostgreSQL\16"
+cd %TEMP%
+git clone --branch v0.8.0 https://github.com/pgvector/pgvector.git
+cd pgvector
+nmake /F Makefile.win
+nmake /F Makefile.win install
+
+now pgvector extension is installed and via pgAdmin you can install it in a database (not necessary as also being done in Python)
+
+CREATE EXTENSION vector;
+
+
+
+-------------------------------------------------------------------
+-- Setup some environment variables to not have to used passwords as cleartext in code
+-------------------------------------------------------------------
+
+
+In CMD create an environment Variable for the database & APi Tokens
+setx PostGresAdminPW "Your_PW"
+setx OpenAPIKey "Your_PW"
+setx HF_token "Your_PW" -- not used 
+
+
+
+
+

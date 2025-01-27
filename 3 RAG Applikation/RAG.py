@@ -27,8 +27,8 @@ def table_similarity(embedding):
     conn = psycopg2.connect(host=MY_DB_HOST,port=MY_DB_PORT,dbname=MY_DB_NAME,user=MY_DB_USER,password=os.getenv('PostGresAdminPW'))
     cur = conn.cursor()
     
-    similarity_limit=0.9
-    top_n_limit=3
+    similarity_limit=0.95
+    top_n_limit=4
     
     
     query = '''
@@ -77,7 +77,7 @@ def colume_similarity(embedding):
     conn = psycopg2.connect(host=MY_DB_HOST,port=MY_DB_PORT,dbname=MY_DB_NAME,user=MY_DB_USER,password=os.getenv('PostGresAdminPW'))
     cur = conn.cursor()
     
-    similarity_limit=0.9
+    similarity_limit=0.95
     top_n_limit=4
     
     
@@ -249,6 +249,9 @@ def find_paths(network,all_tables):
     import networkx as nx
     network['Weight']=1
     
+    print("debugg network")
+    print(network[['ParentTableObjectId','ReferencedTableObjectId']])
+    
     edges = list(network[['ParentTableObjectId','ReferencedTableObjectId','Weight']].itertuples(index=False, name=None))
 
 
@@ -256,6 +259,8 @@ def find_paths(network,all_tables):
     G = nx.Graph()
     
     points = all_tables['ObjectId'].tolist()
+    print('Points')
+    print(points)
     mst = nx.minimum_spanning_tree(G)
     subnetwork_edges = list(mst.edges())
     unique_values = set([item for sublist in subnetwork_edges for item in sublist])
@@ -371,7 +376,11 @@ def get_dependent_tables(tables,columns):
     
     all_tables = pd.concat([tables_from_columns[['SchemaName','TableName','ObjectId']],tables[['SchemaName','TableName','ObjectId']] ],ignore_index=True).drop_duplicates()
     
-    
+    print("debugg network")
+    print(network)
+    print("debugg all_tables")
+
+    print(all_tables)
     result=find_paths(network,all_tables)
     
     
@@ -407,8 +416,13 @@ def build_promt_question(question):
     embedding_str = "[" + ",".join(map(str, embedding)) + "]"
     
     tables=table_similarity(embedding_str)
+    print('Similar tables')
+    pd.set_option('display.max_columns', None)
+    print(tables)
     columns=colume_similarity(embedding_str)
-
+    print('Similar columns')
+    print(columns)
+    
     tables=get_dependent_tables(tables,columns)
 
     
@@ -450,7 +464,7 @@ def call_LLM(promt):
     
     # # Decode and print the result
     # response = tokenizer.decode(output[0], skip_special_tokens=True)   
-    client = openai.OpenAI(api_key=OpenAPIKey)
+    client = openai.OpenAI(api_key=os.getenv('OpenAPIKey'))
 
     response = client.chat.completions.create(
          model='gpt-4o-mini',
@@ -476,18 +490,21 @@ def call_LLM(promt):
 def RAG(question):
     
     promt=build_promt_question(question)
-    print(promt)
+    #print(promt)
     
     result=call_LLM(promt)
     print("iniial response")
     print(result)
     
+    
+    print(promt[0:1000])
     promt='''
         From the following text seperated by " only return the sql code which can be directly executed on MSSQL "
     ''' + result +'"'
     
     print('SQL-Query')
     sql=call_LLM(promt)
+    sql=sql.replace("```", "").replace("sql", "")
     print('SQL-Query')
     print(sql)
     print('SQL Result')
@@ -514,3 +531,11 @@ def RAG(question):
 
 question ="Which are the top 5 customers who have spent the most on orders in the last year?"
 RAG(question)
+
+
+question="Which employees have generated the most sales revenue, and how much have they contributed?"
+RAG(question)
+
+question = "For every region show me the employes with an order fullfillment time which is one standard deviation worse then the regions average"
+RAG(question)
+
