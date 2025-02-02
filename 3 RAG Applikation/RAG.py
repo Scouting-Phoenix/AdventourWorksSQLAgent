@@ -246,6 +246,9 @@ def extended_colume_properties():
 
 def find_paths(network,all_tables):
     # here we calculate the minimal spanning tree in the networt
+    #ToDo: Fix output, currently not output is created, something is wrong....
+    print("---------------------------------------------------------------------------------------")
+    print("debugg Network search")
     import networkx as nx
     network['Weight']=1
     
@@ -253,7 +256,9 @@ def find_paths(network,all_tables):
     print(network[['ParentTableObjectId','ReferencedTableObjectId']])
     
     edges = list(network[['ParentTableObjectId','ReferencedTableObjectId','Weight']].itertuples(index=False, name=None))
-
+    
+    print("edges")
+    print(edges)
 
     # Create a graph (undirected)
     G = nx.Graph()
@@ -289,7 +294,8 @@ def find_paths(network,all_tables):
     conn.close()    
     
     results=pd.merge(df_sql, neded_ids, on='ObjectId', how='inner')[['SchemaName','TableName']].drop_duplicates()
-    
+    print("debugg Network search finisehd")    
+    print("---------------------------------------------------------------------------------------")
     return results
     
     
@@ -394,6 +400,8 @@ def format_table_promt(tables):
     column_extension = extended_colume_properties() 
     table_extension = extended_table_property()
     
+    
+    #ToDo: Join extended property with input tables
     table_prompt=''
     for index, row in table_extension.iterrows():
         table_prompt = table_prompt + "Tablename: " + row['SchemaName'] +"." +    row['TableName'] + row['Description'] +  " with the following columns \n"
@@ -539,3 +547,8 @@ RAG(question)
 question = "For every region show me the employes with an order fullfillment time which is one standard deviation worse then the regions average"
 RAG(question)
 
+question="How much revenue has each employee generated in the North America territory?"
+RAG(question)
+
+question="Calculate month over month change of sales and inventory value. In whitch month was the inventory change relative to the sales change maximal and minimal?"
+RAG(question)

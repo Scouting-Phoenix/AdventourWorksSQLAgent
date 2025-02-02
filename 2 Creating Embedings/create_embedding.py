@@ -31,37 +31,19 @@ def calculate_embedding(df, col):
     #     embeddings.append(embedding)
     
     return df
+
+
 class Vector(UserDefinedType):
     def get_col_spec(self):
         return "VECTOR(768)" 
+    
 
 def save_embedding(target_table, df):
-    
-    MY_DB_HOST = 'localhost'
-    MY_DB_PORT = 5433
-    MY_DB_NAME = 'AdventureWorks_SQLAgent'
-    MY_DB_USER = 'postgres'
-    MY_DB_PASSWORD =os.getenv('PostGresAdminPW')
-    
-    # conn = psycopg2.connect(
-    #     host=MY_DB_HOST,
-    #     port=MY_DB_PORT,
-    #     dbname=MY_DB_NAME,
-    #     user=MY_DB_USER,
-    #     password=os.getenv('PostGresAdminPW')
-    # )
-    
-    # conn.autocommit = True
-    
-    # #df.to_sql(target_table, conn, if_exists= 'replace') - not yet supported`!
-    #conn1.commit() 
-    #conn.close()    
+
     
     engine = create_engine(conn_str_postgres)
     df.to_sql(target_table, engine, if_exists='append', index=False, dtype={'embedding':  Vector() })  # Explicitly define the vector column type if necessary
 
-    
-    
     
     #Todo: Create Index to optimize similarity search
 
